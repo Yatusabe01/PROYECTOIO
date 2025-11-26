@@ -1,0 +1,22 @@
+.web
+assets/external/
+.states
+*.db
+
+# Entorno virtual
+venv/
+.venv/
+
+# Cache de Python
+__pycache__/
+*.py[cod]
+
+# Archivos temporales
+*.log
+*.tmp
+
+# Configuración de entorno
+.env
+
+# VSCode
+.vscode/
