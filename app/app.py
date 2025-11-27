@@ -12,29 +12,11 @@ def main():
 
     st.title("Proyecto – Flujo Máximo y Editor de Grafos")
 
-    tab1, tab2, tab3 = st.tabs(["📝 Editor", "📊 Grafo", "⚡ Flujo Máximo"])
+    tab1, tab2= st.tabs(["Editor", "Grafo", "Flujo Máximo"])
 
-    # ============================
-    # TAB 1: Editor
-    # ============================
     with tab1:
-        st.subheader("Editor de Nodos y Aristas")
-        gestionar_nodos()
-        gestionar_aristas()
-
-    # ============================
-    # TAB 2: Grafo
-    # ============================
-    with tab2:
         st.subheader("Visualización del Grafo")
         mostrar_grafo()
-
-    # ============================
-    # TAB 3: Flujo Máximo
-    # ============================
-    with tab3:
+    with tab2:
         calcular_flujo_maximo()
 
-
-if __name__ == "__main__":
-    main()
