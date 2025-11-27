@@ -11,6 +11,8 @@ venv/
 __pycache__/
 *.py[cod]
 
+steps/
+
 # Archivos temporales
 *.log
 *.tmp
