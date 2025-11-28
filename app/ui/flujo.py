@@ -1,3 +1,4 @@
+# ui/flujo.py
 import streamlit as st
 import networkx as nx
 from ui.algoritmo import Grafo
@@ -20,62 +21,60 @@ def calcular_flujo_maximo():
             st.error("La fuente y el sumidero deben ser diferentes.")
             return
 
-        # Construir grafo para visualizar
+        # -------------------------------------------------
+        # 1. Grafo original para visualización (NetworkX)
+        # -------------------------------------------------
         G_nx = nx.DiGraph()
         for (u, v, c) in st.session_state.aristas:
             G_nx.add_edge(u, v, capacidad=c)
 
-        # Layout fijo
+        # Layout fijo (fuente izquierda, sumidero derecha)
         layout_fijo = generar_layout_por_fuente_sumidero(G_nx, fuente, sumidero)
         st.session_state["layout_fs"] = layout_fijo
 
-        # Construir grafo para el algoritmo
+        # -------------------------------------------------
+        # 2. Grafo para el algoritmo (clase Grafo personalizada)
+        # -------------------------------------------------
         grafo_algo = Grafo()
         for (u, v, c) in st.session_state.aristas:
             grafo_algo.agregar_arista(u, v, c)
 
-        # Ejecutar algoritmo sin registrar pasos
+        # -------------------------------------------------
+        # 3. Ejecutar Ford-Fulkerson
+        # -------------------------------------------------
         flujo = grafo_algo.ford_fulkerson(fuente, sumidero, registrar_paso=None)
 
-        # 📌 Recuperar camino final usado (desde residual)
-        camino_final = []
-        actual = sumidero
-        padre = {}
+        # -------------------------------------------------
+        # 4. NO intentar reconstruir un camino final
+        #     → cuando el flujo máximo se alcanza NO existe camino aumentante
+        # -------------------------------------------------
+        camino_final = None  # o [] si tu función lo prefiere
 
-        # reconstruimos camino desde las capacidades residuales
-        while actual != fuente:
-            encontrado = False
-            for u in grafo_algo.grafo:
-                if actual in grafo_algo.grafo[u] and grafo_algo.grafo[u][actual] > 0:
-                    padre[actual] = u
-                    actual = u
-                    encontrado = True
-                    break
+        # -------------------------------------------------
+        # 5. Generar imagen final (red residual + flujo total)
+        # -------------------------------------------------
+        try:
+            ruta_img_final = guardar_imagen_final(
+                G_original=G_nx,
+                grafo_residual=grafo_algo.grafo,      # red residual real
+                camino_final=camino_final,             # puede ser None
+                layout_fijo=layout_fijo,
+                flujo_total=flujo
+            )
+        except Exception as e:
+            st.error(f"Error al generar la imagen final: {e}")
+            ruta_img_final = None
 
-            if not encontrado:
-                break
-
-        if fuente in padre.values():
-            nodo = sumidero
-            camino_final.append(nodo)
-            while nodo != fuente:
-                nodo = padre[nodo]
-                camino_final.append(nodo)
-            camino_final.reverse()
-
-        # Imagen final usando la red residual + camino final
-        ruta_img_final = guardar_imagen_final(
-            G_original=G_nx,
-            grafo_residual=grafo_algo.grafo,  # <<--- Residual real
-            camino_final=camino_final,
-            layout_fijo=layout_fijo,
-            flujo_total=flujo
-        )
-
+        # -------------------------------------------------
+        # 6. Mostrar resultados
+        # -------------------------------------------------
         st.subheader("Grafo Original")
         mostrar_grafo(fuente, sumidero)
 
-        st.success(f"Flujo máximo encontrado: {flujo}")
+        st.success(f"**Flujo máximo encontrado: {flujo}**")
 
-        st.subheader("Resultado Final")
-        st.image(ruta_img_final)
+        st.subheader("Red Residual Final")
+        if ruta_img_final:
+            st.image(ruta_img_final)
+        else:
+            st.warning("No se pudo generar la imagen de la red residual.")

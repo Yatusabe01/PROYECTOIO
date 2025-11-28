@@ -11,6 +11,9 @@ def crear_carpeta_steps():
 
 
 def guardar_imagen_final(G_original, grafo_residual, camino_final, layout_fijo, flujo_total):
+    if camino_final is None:
+        camino_final = []  # o simplemente no dibujes nada especial
+    # ... resto del código
     carpeta = crear_carpeta_steps()
     nombre = f"final_{datetime.now().strftime('%H%M%S%f')}.png"
     ruta = os.path.join(carpeta, nombre)
