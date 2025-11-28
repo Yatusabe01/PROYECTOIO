@@ -12,11 +12,16 @@ def main():
 
     st.title("Proyecto – Flujo Máximo y Editor de Grafos")
 
-    tab1, tab2= st.tabs(["Grafo", "Flujo Máximo"])
+    tab1, tab2= st.tabs([ "Grafo", "Flujo Máximo"])
 
+        
     with tab1:
         st.subheader("Visualización del Grafo")
+        gestionar_nodos()
+        gestionar_aristas()
         mostrar_grafo()
     with tab2:
         calcular_flujo_maximo()
+
+main()
 
