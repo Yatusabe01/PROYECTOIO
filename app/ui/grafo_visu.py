@@ -1,116 +1,107 @@
-# ui/grafo_visu.py → VERSIÓN FINAL DEFINITIVA (flechas rectas + separadas)
-
+# ui/grafo_visu.py → VERSIÓN FINAL PROFESIONAL (como en los libros)
 import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
 
-def generar_layout_por_fuente_sumidero(G, fuente, sumidero):
-    nodos = list(G.nodes())
-    niveles = {n: 1 for n in nodos}
-    if fuente in nodos: niveles[fuente] = 0
-    if sumidero in nodos: niveles[sumidero] = 2
-
+def generar_layout_profesional(G, fuente, sumidero):
+    """Layout perfecto: niveles automáticos por distancia desde la fuente"""
     pos = {}
-    columnas = {0: [], 1: [], 2: []}
-    for nodo, col in niveles.items():
-        columnas[col].append(nodo)
-
-    for col, lista in columnas.items():
-        lista.sort()
-        espaciado = 1 / (len(lista) + 1)
-        for idx, nodo in enumerate(lista):
-            x = 0.1 + col * 0.4
-            y = 1 - (idx + 1) * espaciado
+    
+    # Calcular niveles con BFS desde la fuente
+    niveles = {}
+    from collections import deque
+    queue = deque([fuente])
+    niveles[fuente] = 0
+    visitados = {fuente}
+    
+    while queue:
+        actual = queue.popleft()
+        for vecino in G.successors(actual):
+            if vecino not in visitados:
+                visitados.add(vecino)
+                niveles[vecino] = niveles[actual] + 1
+                queue.append(vecino)
+    
+    # Asignar coordenadas: x por nivel, y distribuido uniformemente
+    max_nivel = max(niveles.values()) if niveles else 0
+    nodos_por_nivel = {}
+    for nodo, nivel in niveles.items():
+        nodos_por_nivel.setdefault(nivel, []).append(nodo)
+    
+    # Añadir nodos no alcanzables (raro, pero por seguridad)
+    for nodo in G.nodes():
+        if nodo not in niveles:
+            niveles[nodo] = max_nivel + 1
+            nodos_por_nivel.setdefault(niveles[nodo], []).append(nodo)
+    
+    # Posicionar
+    for nivel, nodos in nodos_por_nivel.items():
+        nodos.sort()  # orden alfabético para consistencia
+        y_step = 1.0 / (len(nodos) + 1)
+        for i, nodo in enumerate(nodos):
+            x = nivel / max(1, max_nivel) * 10  # espaciado horizontal generoso
+            y = (i + 1) * y_step * 2 - 1  # centrado verticalmente
             pos[nodo] = (x, y)
+    
+    # Asegurar que fuente y sumidero estén bien alineados
+    if fuente in pos:
+        pos[fuente] = (0, 0)
+    if sumidero in pos:
+        pos[sumidero] = (10, 0)
+    
     return pos
 
-
-def dibujar_grafo(G, fuente=None, sumidero=None):
-    if G.number_of_nodes() == 0:
-        st.info("Agrega nodos para visualizar el grafo.")
-        return
-
-    if fuente and sumidero:
-        pos = generar_layout_por_fuente_sumidero(G, fuente, sumidero)
-        st.session_state["layout_fs"] = pos
-    else:
-        pos = nx.spring_layout(G, seed=42)
-
-    fig, ax = plt.subplots(figsize=(12, 9))
-    ax.set_facecolor("#f8fbff")
-
-    # === DIBUJAR ARISTAS: una arriba, otra abajo si es bidireccional ===
-    for u, v, data in G.edges(data=True):
-        capacidad = data.get("capacidad", "")
-
-        # Calcular vector perpendicular para separar
-        x1, y1 = pos[u]
-        x2, y2 = pos[v]
-        dx = x2 - x1
-        dy = y2 - y1
-        length = (dx**2 + dy**2)**0.5 or 1
-        perp_x = -dy / length
-        perp_y = dx / length
-
-        # --- Nueva separación estable basada en orientación ---
-        offset = 0.0
-        if G.has_edge(v, u):
-            signo = 1 if (dx * perp_x + dy * perp_y) < 0 else -1
-            offset = signo * 0.06
-
-        # Posiciones desplazadas
-        x1_o = x1 + offset * perp_x
-        y1_o = y1 + offset * perp_y
-        x2_o = x2 + offset * perp_x
-        y2_o = y2 + offset * perp_y
-
-        # Flecha recta desplazada
-        ax.annotate("",
-                    xy=(x2_o, y2_o),
-                    xytext=(x1_o, y1_o),
-                    arrowprops=dict(
-                        arrowstyle='-|>',
-                        color='#2ecc71',
-                        lw=4.5,
-                        shrinkA=30,
-                        shrinkB=30,
-                    ),
-                    zorder=1)
-
-        # Etiqueta ajustada
-        xc = (x1_o + x2_o) / 2
-        yc = (y1_o + y2_o) / 2
-        if G.has_edge(v, u):
-            yc += 0.04 * (1 if offset > 0 else -1)
-
-        ax.text(xc, yc, str(capacidad),
-                fontsize=13, fontweight='bold', color='#1a6600',
-                bbox=dict(facecolor='white', alpha=0.97, edgecolor='none', pad=5),
-                ha='center', va='center', zorder=10)
-    # === NODOS ===
-    node_colors = ['#e74c3c' if n in [fuente, sumidero] else '#4A90E2' for n in G.nodes()]
-    nx.draw_networkx_nodes(G, pos,
-                           node_color=node_colors,
-                           node_size=2000,
-                           linewidths=3,
-                           edgecolors='black',
-                           ax=ax)
-
-    nx.draw_networkx_labels(G, pos,
-                            font_size=14,
-                            font_weight='bold',
-                            font_color='white',
-                            ax=ax)
-
-    ax.axis('off')
-    plt.tight_layout()
-    st.pyplot(fig)
-
+# ← MANTENEMOS ESTA PARA QUE NO HAYA ERRORES DE IMPORT
+def generar_layout_por_fuente_sumidero(G, fuente, sumidero):
+    return generar_layout_profesional(G, fuente, sumidero)
 
 def mostrar_grafo(fuente=None, sumidero=None):
+    if not st.session_state.get("nodos"):
+        st.info("Agrega nodos para ver el grafo")
+        return
+
     G = nx.DiGraph()
     for n in st.session_state.nodos:
         G.add_node(n)
     for u, v, c in st.session_state.aristas:
         G.add_edge(u, v, capacidad=c)
-    dibujar_grafo(G, fuente, sumidero)
+
+    # Layout profesional si tenemos fuente y sumidero
+    if fuente and sumidero and fuente in G.nodes and sumidero in G.nodes:
+        pos = generar_layout_profesional(G, fuente, sumidero)
+        st.session_state["layout_fs"] = pos
+    else:
+        pos = nx.spring_layout(G, seed=42, k=2, iterations=50)
+
+    fig, ax = plt.subplots(figsize=(14, 8))
+
+    # Nodos
+    color_nodos = ['#e74c3c' if n in [fuente, sumidero] else '#3498db' for n in G.nodes]
+    nx.draw_networkx_nodes(G, pos, node_size=2200, node_color=color_nodos,
+                           edgecolors='white', linewidths=4, ax=ax)
+
+    nx.draw_networkx_labels(G, pos, font_size=16, font_weight='bold', font_color='white', ax=ax)
+
+    # Aristas verdes rectas y bonitas
+    nx.draw_networkx_edges(G, pos,
+                           width=5,
+                           edge_color='#27ae60',
+                           arrows=True,
+                           arrowsize=35,
+                           arrowstyle='->',
+                           connectionstyle='arc3,rad=0',  # ← RECTA PERFECTA
+                           alpha=0.9,
+                           ax=ax)
+
+    # Etiquetas de capacidad
+    edge_labels = {(u, v): str(c) for u, v, c in st.session_state.aristas}
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels,
+                                 font_size=14, font_weight='bold', font_color='#27ae60',
+                                 bbox=dict(facecolor='white', alpha=0.9, edgecolor='none', pad=6),
+                                 ax=ax)
+
+    ax.set_facecolor('#f8f9fa')
+    ax.set_title("Grafo Original", fontsize=20, fontweight='bold', pad=30)
+    ax.axis('off')
+    plt.tight_layout()
+    st.pyplot(fig, use_container_width=True)

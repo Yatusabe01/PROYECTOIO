@@ -4,7 +4,6 @@ from ui.nodos import gestionar_nodos
 from ui.arista import gestionar_aristas
 from ui.grafo_visu import mostrar_grafo
 from ui.flujo import calcular_flujo_maximo
-from ui.matriz import cargar_desde_matriz  # ← ya lo tienes
 
 def limpiar_todo():
     """Función central para resetear TODO el estado"""
@@ -30,7 +29,7 @@ def main():
             st.rerun()
             
     # Pestañas normales
-    tab1, tab2, tab3 = st.tabs(["Grafo", "Flujo Máximo", "Cargar Matriz"])
+    tab1, tab2 = st.tabs(["Grafo", "Flujo Máximo"])
 
     with tab1:
         st.subheader("Editor y Visualización del Grafo")
@@ -40,8 +39,5 @@ def main():
 
     with tab2:
         calcular_flujo_maximo()
-
-    with tab3:
-        cargar_desde_matriz()
-        
+  
 main()
