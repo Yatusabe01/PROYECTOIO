@@ -1,4 +1,5 @@
-# utils/step.py → VERSIÓN FINAL DEFINITIVA
+# app/utils/step.py
+
 import networkx as nx
 import matplotlib.pyplot as plt
 import os
@@ -24,38 +25,45 @@ def guardar_imagen_final(G_original, grafo_residual, camino_final, layout_fijo, 
     edge_colors = []
     edge_widths = []
 
-    for u, v, data in G_original.edges(data=True):
-        cap = data.get("capacidad", 0)
-        flujo = grafo_residual[v].get(u, 0)  # flujo real = capacidad residual contraria
-        edge_labels[(u, v)] = f"{flujo}/{cap}"
+    for u, v in G_original.edges():
+        # ¡¡AQUÍ ESTABA EL ERROR!! → usabas 'capacidad' pero NetworkX usa 'capacity'
+        cap_original = G_original[u][v]['capacity']
 
-        if flujo == cap and flujo > 0:
-            edge_colors.append("#e74c3c")   # saturada
+        # Flujo real que realmente pasó por u → v = lo que hay en la arista inversa v → u
+        flujo_real = grafo_residual[v].get(u, 0)
+
+        edge_labels[(u, v)] = f"{flujo_real}/{cap_original}"
+
+        if flujo_real == cap_original and flujo_real > 0:
+            edge_colors.append("#e74c3c")   # saturada → rojo
+            edge_widths.append(8)
+        elif flujo_real > 0:
+            edge_colors.append("#e67e22")   # usada → naranja
             edge_widths.append(6)
-        elif flujo > 0:
-            edge_colors.append("#e67e22")   # parcial
-            edge_widths.append(4.5)
         else:
-            edge_colors.append("#95a5a6")   # sin flujo
+            edge_colors.append("#95a5a6")   # sin flujo → gris
             edge_widths.append(2)
 
+    # Dibujo
     nx.draw_networkx_nodes(G_original, pos,
                            node_size=3000, node_color="#4A90E2",
                            edgecolors="white", linewidths=5)
+
     nx.draw_networkx_labels(G_original, pos,
                             font_size=18, font_color="white", font_weight="bold")
 
     nx.draw_networkx_edges(G_original, pos,
-                           width=edge_widths, edge_color=edge_colors,
+                           width=edge_widths,
+                           edge_color=edge_colors,
                            arrows=True, arrowsize=45, arrowstyle="->",
                            connectionstyle="arc3,rad=0", alpha=0.95)
 
     nx.draw_networkx_edge_labels(G_original, pos,
                                  edge_labels=edge_labels,
-                                 label_pos=0.25,
-                                 font_size=14, font_weight="bold",
+                                 label_pos=0.3,
+                                 font_size=16, font_weight="bold",
                                  font_color="black",
-                                 bbox=dict(boxstyle="round,pad=0.5", facecolor="#f1c40f", alpha=0.9))
+                                 bbox=dict(facecolor="#f1c40f", alpha=0.9, boxstyle="round,pad=0.5"))
 
     plt.title(f"Red Residual Final → Flujo Máximo = {flujo_total}",
               fontsize=26, fontweight="bold", color="#2c3e50", pad=30)
@@ -63,4 +71,5 @@ def guardar_imagen_final(G_original, grafo_residual, camino_final, layout_fijo, 
     plt.tight_layout()
     plt.savefig(ruta, dpi=200, bbox_inches="tight", facecolor="white")
     plt.close()
+
     return ruta

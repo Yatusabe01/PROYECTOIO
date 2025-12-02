@@ -25,13 +25,10 @@ class Grafo:
                     if v == sumidero:
                         return True
         return False
-
-    # Ford–Fulkerson sin pasos ni imágenes
     def ford_fulkerson(self, fuente, sumidero, registrar_paso=None):
         padre = {}
         flujo_max = 0
 
-        # No registrar pasos — SOLO crear grafo NX para consistencia
         G_nx = nx.DiGraph()
         for u in self.grafo:
             for v in self.grafo[u]:
@@ -44,7 +41,6 @@ class Grafo:
             v = sumidero
             flujo_camino = float("inf")
 
-            # Recuperar camino y encontrar flujo posible
             while v != fuente:
                 camino.append(v)
                 u = padre[v]
@@ -53,16 +49,13 @@ class Grafo:
             camino.append(fuente)
             camino.reverse()
 
-            # Aumentar flujo total
             flujo_max += flujo_camino
 
-            # Actualizar capacidades residuales
             v = sumidero
             while v != fuente:
                 u = padre[v]
                 self.grafo[u][v] -= flujo_camino
 
-                # Para residual inversa
                 if self.grafo[v].get(u) is None:
                     self.grafo[v][u] = 0
                 self.grafo[v][u] += flujo_camino

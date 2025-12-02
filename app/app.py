@@ -10,7 +10,6 @@ def limpiar_todo():
     st.session_state.nodos = set()
     st.session_state.aristas = []
     st.session_state.layout_fs = None
-    # Si usas más variables en session_state, límpialas aquí también
     st.success("¡Todo limpiado! Listo para un grafo nuevo.")
     st.rerun()
 

@@ -17,12 +17,10 @@ def gestionar_aristas():
                 st.sidebar.error("No puedes conectar un nodo consigo mismo.")
                 return
 
-            # 🔥 PREVENIR ARISTAS DUPLICADAS
             if (u, v, capacidad) in st.session_state.aristas:
                 st.sidebar.error("Esa arista ya existe.")
                 return
 
-            # 🔥 PREVENIR MISMA ARISTA A→B SIN IMPORTAR CAPACIDAD
             for (a, b, _) in st.session_state.aristas:
                 if a == u and b == v:
                     st.sidebar.error("Ya existe una arista entre esos nodos.")
@@ -31,14 +29,10 @@ def gestionar_aristas():
             st.session_state.aristas.append((u, v, capacidad))
             st.success(f"Arista {u} → {v} agregada.")
 
-    # ============================================
-    #   ELIMINAR ARISTA (sin duplicados visuales)
-    # ============================================
 
     if st.session_state.aristas:
         st.sidebar.header("Eliminar Arista")
 
-        # 🔥 Remover duplicados manteniendo orden
         aristas_unicas = list(dict.fromkeys(st.session_state.aristas))
 
         lista_aristas = [
