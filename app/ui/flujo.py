@@ -1,10 +1,11 @@
 # app/ui/flujo.py
+# Con bordes elegantes para las imágenes
 
 import streamlit as st
 import networkx as nx
 from ui.algoritmo import Grafo
 from utils.step import guardar_imagen_final
-from ui.grafo_visu import generar_layout_por_fuente_sumidero, mostrar_grafo
+from ui.grafo_visu import mostrar_grafo
 
 
 def calcular_flujo_maximo():
@@ -26,37 +27,38 @@ def calcular_flujo_maximo():
             st.error("La fuente y el sumidero deben ser diferentes.")
             return
 
-        # Grafo temporal solo para validar camino
+        # Grafo con TODOS los nodos
         G_temp = nx.DiGraph()
+        G_temp.add_nodes_from(st.session_state.nodos)
         for u, v, c in st.session_state.aristas:
             G_temp.add_edge(u, v, capacity=c)
 
-        # ¡VALIDACIÓN CLAVE!
-        if not nx.has_path(G_temp, fuente, sumidero):
-            st.error(
-                f"**No existe ningún camino dirigido de {fuente} hacia {sumidero}.**\n\n"
-                "Revisa que las flechas de las aristas apunten desde la fuente hacia el sumidero "
-                "(pueden pasar por nodos intermedios)."
-            )
-            return  # ← No muestra nada más. Limpio y claro
+        # Validación segura
+        try:
+            if not nx.has_path(G_temp, fuente, sumidero):
+                st.error(
+                    f"No existe camino dirigido de **{fuente}** → **{sumidero}**.\n\n"
+                    "Agrega aristas que conecten la fuente con el sumidero."
+                )
+                return
+        except nx.NodeNotFound:
+            st.error("Error interno: nodo no encontrado. Esto no debería pasar.")
+            return
 
-        # Si hay camino → calculamos
-        layout_fijo = generar_layout_por_fuente_sumidero(G_temp, fuente, sumidero)
-        st.session_state.layout_fs = layout_fijo
-
+        # Algoritmo
         grafo_algo = Grafo()
         for u, v, c in st.session_state.aristas:
             grafo_algo.agregar_arista(u, v, c)
 
         flujo_maximo = grafo_algo.ford_fulkerson(fuente, sumidero)
 
-        # Imagen final de red residual
+        # Imagen final
         try:
             ruta_img = guardar_imagen_final(
                 G_original=G_temp,
                 grafo_residual=grafo_algo.grafo,
                 camino_final=None,
-                layout_fijo=layout_fijo,
+                layout_fijo=st.session_state.get("layout_fs", {}),
                 flujo_total=flujo_maximo
             )
         except Exception as e:
@@ -70,6 +72,21 @@ def calcular_flujo_maximo():
 
         st.subheader("Red Residual Final")
         if ruta_img:
-            st.image(ruta_img, use_container_width=True)
+            # Contenedor con columna para controlar mejor el layout
+            with st.container():
+                st.markdown("""
+                    <div style='
+                        background: #f8f9fa;
+                        padding: 20px;
+                        border-radius: 12px;
+                        border: 3px solid #2c3e50;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                        margin: 20px 0;
+                    '>
+                """, unsafe_allow_html=True)
+                
+                st.image(ruta_img, use_container_width=True)
+                
+                st.markdown("</div>", unsafe_allow_html=True)
         else:
-            st.info("No se generó la imagen de la red residual.")
+            st.info("No se generó imagen de la red residual.")

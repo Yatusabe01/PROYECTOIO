@@ -1,4 +1,5 @@
 # app/ui/grafo_visu.py
+# Versión con bordes elegantes para diferenciar del fondo blanco
 
 import streamlit as st
 import networkx as nx
@@ -6,12 +7,18 @@ import matplotlib.pyplot as plt
 from collections import deque
 
 
-def generar_layout_profesional(G, fuente, sumidero):
+def generar_layout_niveles(G, nodo_inicial=None):
+    if not G.nodes:
+        return {}, None
+
+    if nodo_inicial is None or nodo_inicial not in G.nodes:
+        nodo_inicial = min(G.nodes, key=str)
+
     pos = {}
     niveles = {}
-    queue = deque([fuente])
-    niveles[fuente] = 0
-    visitados = {fuente}
+    queue = deque([nodo_inicial])
+    niveles[nodo_inicial] = 0
+    visitados = {nodo_inicial}
 
     while queue:
         actual = queue.popleft()
@@ -30,25 +37,15 @@ def generar_layout_profesional(G, fuente, sumidero):
     for nodo, nivel in niveles.items():
         nodos_por_nivel.setdefault(nivel, []).append(nodo)
 
-    for nivel, nodos in nodos_por_nivel.items():
-        nodos.sort()
-        y_step = 1.0 / (len(nodos) + 1)
-        for i, nodo in enumerate(nodos):
-            x = nivel * 3.0
+    for nivel, lista in nodos_por_nivel.items():
+        lista.sort(key=str)
+        y_step = 1.0 / (len(lista) + 1)
+        for i, nodo in enumerate(lista):
+            x = nivel * 5.0
             y = (i + 1) * y_step * 2 - 1
             pos[nodo] = (x, y)
 
-    # Fuente y sumidero siempre centrados
-    if fuente in pos:
-        pos[fuente] = (0, 0)
-    if sumidero in pos:
-        pos[sumidero] = (max_nivel * 3.0, 0)
-
-    return pos
-
-
-def generar_layout_por_fuente_sumidero(G, fuente, sumidero):
-    return generar_layout_profesional(G, fuente, sumidero)
+    return pos, nodo_inicial
 
 
 def mostrar_grafo(fuente=None, sumidero=None):
@@ -57,53 +54,83 @@ def mostrar_grafo(fuente=None, sumidero=None):
         return
 
     G = nx.DiGraph()
-    for n in st.session_state.nodos:
-        G.add_node(n)
+    G.add_nodes_from(st.session_state.nodos)
     for u, v, c in st.session_state.aristas:
-        G.add_edge(u, v, capacidad=c)
+        G.add_edge(u, v, capacity=c)
 
-    # Layout según fuente/sumidero
     if fuente and sumidero and fuente in G.nodes and sumidero in G.nodes:
-        pos = generar_layout_profesional(G, fuente, sumidero)
-        st.session_state.layout_fs = pos
+        pos, _ = generar_layout_niveles(G, nodo_inicial=fuente)
+        max_x = max(x for x, y in pos.values())
+        pos[sumidero] = (max_x + 5.0, 0)
+        titulo = f"Grafo del Flujo → Fuente: {fuente} | Sumidero: {sumidero}"
+        caption = f"Ordenado desde la fuente **{fuente}**"
+        color_map = ['#e74c3c' if n == fuente else '#9b59b6' if n == sumidero else '#3498db' for n in G.nodes]
     else:
-        pos = nx.spring_layout(G, seed=42, k=4, iterations=100)
+        pos, nodo_raiz = generar_layout_niveles(G)
+        titulo = "Editor y Visualización del Grafo"
+        caption = f"Layout automático ordenado desde el nodo **{nodo_raiz}**"
+        color_map = '#3498db'
 
-    fig, ax = plt.subplots(figsize=(16, 10))
+    st.session_state.layout_fs = pos
+
+    fig, ax = plt.subplots(figsize=(18, 10))
+    # Fondo gris claro para el grafo
+    fig.patch.set_facecolor('#f8f9fa')
     ax.set_facecolor('#f8f9fa')
 
-    # Colores bonitos
-    color_map = []
-    for node in G.nodes:
-        if node == fuente:
-            color_map.append('#e74c3c')    # rojo
-        elif node == sumidero:
-            color_map.append('#9b59b6')    # morado
-        else:
-            color_map.append('#3498db')    # azul
+    nx.draw_networkx_nodes(G, pos,
+                           node_size=3800,
+                           node_color=color_map,
+                           edgecolors='white',
+                           linewidths=6,
+                           ax=ax)
 
-    nx.draw_networkx_nodes(G, pos, node_size=3000, node_color=color_map,
-                           edgecolors='white', linewidths=5, ax=ax)
-    nx.draw_networkx_labels(G, pos, font_size=18, font_weight='bold',
-                            font_color='white', ax=ax)
+    nx.draw_networkx_labels(G, pos,
+                            font_size=22,
+                            font_color='white',
+                            font_weight='bold',
+                            ax=ax)
 
     nx.draw_networkx_edges(G, pos,
-                           width=6, edge_color='#27ae60',
-                           arrows=True, arrowsize=45, arrowstyle='->',
-                           alpha=0.95, ax=ax)
+                           width=8,
+                           edge_color='#27ae60',
+                           arrows=True,
+                           arrowsize=55,
+                           arrowstyle='->',
+                           alpha=0.95,
+                           ax=ax)
 
-    edge_labels = {(u, v): str(d['capacidad']) for u, v, d in G.edges(data=True)}
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels,
-                                 label_pos=0.3, font_size=16, font_weight='bold',
-                                 font_color='#27ae60',
-                                 bbox=dict(facecolor='white', alpha=0.9, edgecolor='none'))
+    edge_labels = {(u, v): f"{d['capacity']}" for u, v, d in G.edges(data=True)}
+    nx.draw_networkx_edge_labels(G, pos,
+                                 edge_labels=edge_labels,
+                                 label_pos=0.5,
+                                 font_size=19,
+                                 font_weight='bold',
+                                 font_color='white',
+                                 bbox=dict(facecolor='#27ae60',
+                                           edgecolor='none',
+                                           boxstyle='round,pad=0.7',
+                                           alpha=0.9))
 
-    titulo = "Grafo del Flujo"
-    if fuente and sumidero:
-        titulo += f" → Fuente: {fuente} | Sumidero: {sumidero}"
-    ax.set_title(titulo, fontsize=24, fontweight='bold', pad=30, color='#2c3e50')
+    ax.set_title(titulo, fontsize=30, fontweight='bold', color='#2c3e50', pad=40)
     ax.axis('off')
     plt.tight_layout()
 
+    # Contenedor con borde oscuro elegante
+    st.markdown("""
+        <div style='
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 3px solid #2c3e50;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        '>
+    """, unsafe_allow_html=True)
+    
     st.pyplot(fig, use_container_width=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
     plt.close(fig)
+
+    st.caption(caption)
