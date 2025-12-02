@@ -1,11 +1,12 @@
 # app/ui/flujo.py
-# Con bordes elegantes para las imágenes
+# Con bordes que funcionan correctamente
 
 import streamlit as st
 import networkx as nx
 from ui.algoritmo import Grafo
 from utils.step import guardar_imagen_final
 from ui.grafo_visu import mostrar_grafo
+from PIL import Image
 
 
 def calcular_flujo_maximo():
@@ -72,21 +73,22 @@ def calcular_flujo_maximo():
 
         st.subheader("Red Residual Final")
         if ruta_img:
-            # Contenedor con columna para controlar mejor el layout
-            with st.container():
-                st.markdown("""
-                    <div style='
-                        background: #f8f9fa;
-                        padding: 20px;
-                        border-radius: 12px;
-                        border: 3px solid #2c3e50;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                        margin: 20px 0;
-                    '>
-                """, unsafe_allow_html=True)
-                
-                st.image(ruta_img, use_container_width=True)
-                
-                st.markdown("</div>", unsafe_allow_html=True)
+            # CSS que afecta directamente al contenedor de la imagen
+            st.markdown("""
+                <style>
+                div[data-testid="stImage"]:has(img[src*="final_"]) {
+                    background: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 12px;
+                    border: 3px solid #2c3e50;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    margin: 20px 0;
+                }
+                </style>
+            """, unsafe_allow_html=True)
+            
+            # Cargar imagen con PIL
+            img = Image.open(ruta_img)
+            st.image(img, use_container_width=True)
         else:
             st.info("No se generó imagen de la red residual.")

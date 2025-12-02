@@ -8,7 +8,7 @@ from ui.flujo import calcular_flujo_maximo
 # Configuración
 st.set_page_config(
     page_title="Flujo Máximo • Editor de Grafos",
-    page_icon="🔀",  # Cambia por: 📊 🌊 📈 🎯 o tu imagen
+    page_icon="logo/logo.png", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -165,7 +165,9 @@ st.markdown("""
 # App
 init_session()
 
-st.title("Proyecto – Flujo Máximo y Editor de Grafos")
+st.title("""
+         SNOWFLOW • CALCULADORA DE FLUJO MAXIMO
+         """)
 
 with st.sidebar:
     st.markdown("### Controles")
@@ -185,3 +187,11 @@ with tab1:
 
 with tab2:
     calcular_flujo_maximo()
+
+st.markdown("<p style='font-size:14px; font-weight:600;'>Creado por:", unsafe_allow_html=True)
+st.markdown("<p style='font-size:14px; font-weight:600;'>Fredy Alexander de la Cruz Gomez</p>", unsafe_allow_html=True)
+st.markdown("<p style='font-size:14px; font-weight:600;'>Manuel de Jesus Flores de la Cruz</p>", unsafe_allow_html=True)
+st.markdown("<p style='font-size:14px; font-weight:600;'>Sebastian Emiliano Anzueto Escobar</p>", unsafe_allow_html=True)
+
+st.markdown("<p style='font-size:14px; font-weight:600; margin-top:12px;'>Colaboraciones:</p>", unsafe_allow_html=True)
+st.markdown("<p style='font-size:14px;'>Lester Randolf Ford, Jr. y Delbert Ray Fulkerson</p>", unsafe_allow_html=True)

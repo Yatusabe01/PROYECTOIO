@@ -1,10 +1,12 @@
 # app/ui/grafo_visu.py
-# Versión con bordes elegantes para diferenciar del fondo blanco
+# Versión con bordes que REALMENTE funcionan
 
 import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
 from collections import deque
+import io
+from PIL import Image
 
 
 def generar_layout_niveles(G, nodo_inicial=None):
@@ -73,8 +75,8 @@ def mostrar_grafo(fuente=None, sumidero=None):
 
     st.session_state.layout_fs = pos
 
+    # Crear figura con fondo gris
     fig, ax = plt.subplots(figsize=(18, 10))
-    # Fondo gris claro para el grafo
     fig.patch.set_facecolor('#f8f9fa')
     ax.set_facecolor('#f8f9fa')
 
@@ -98,12 +100,15 @@ def mostrar_grafo(fuente=None, sumidero=None):
                            arrowsize=55,
                            arrowstyle='->',
                            alpha=0.95,
+                           min_source_margin=35,  # ← Margen desde el nodo origen
+                           min_target_margin=35,  # ← Margen hasta el nodo destino
                            ax=ax)
 
+    # Etiquetas MUY cerca del nodo de origen (label_pos=0.15)
     edge_labels = {(u, v): f"{d['capacity']}" for u, v, d in G.edges(data=True)}
     nx.draw_networkx_edge_labels(G, pos,
                                  edge_labels=edge_labels,
-                                 label_pos=0.5,
+                                 label_pos=0.15,  # ← MUY CERCA DEL ORIGEN
                                  font_size=19,
                                  font_weight='bold',
                                  font_color='white',
@@ -116,21 +121,30 @@ def mostrar_grafo(fuente=None, sumidero=None):
     ax.axis('off')
     plt.tight_layout()
 
-    # Contenedor con borde oscuro elegante
-    st.markdown("""
-        <div style='
+    # Guardar en buffer y convertir a imagen
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', 
+                facecolor='#f8f9fa', edgecolor='none')
+    buf.seek(0)
+    img = Image.open(buf)
+    
+    # Agregar borde a la imagen directamente con CSS global
+    st.markdown(f"""
+        <style>
+        div[data-testid="stImage"] {{
             background: #f8f9fa;
             padding: 20px;
             border-radius: 12px;
             border: 3px solid #2c3e50;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             margin: 20px 0;
-        '>
+        }}
+        </style>
     """, unsafe_allow_html=True)
     
-    st.pyplot(fig, use_container_width=True)
+    st.image(img, use_container_width=True)
     
-    st.markdown("</div>", unsafe_allow_html=True)
     plt.close(fig)
+    buf.close()
 
     st.caption(caption)

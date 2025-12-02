@@ -1,4 +1,5 @@
 # app/utils/step.py
+# Con fondo gris para mantener consistencia visual
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -21,7 +22,11 @@ def guardar_imagen_final(G_original, grafo_residual, camino_final, layout_fijo, 
     nombre = f"final_{datetime.now().strftime('%H%M%S%f')}.png"
     ruta = os.path.join(carpeta, nombre)
 
-    plt.figure(figsize=(16, 10))
+    # Figura con fondo gris claro igual que grafo_visu.py
+    fig, ax = plt.subplots(figsize=(18, 10))
+    fig.patch.set_facecolor('#f8f9fa')
+    ax.set_facecolor('#f8f9fa')
+    
     pos = layout_fijo or nx.spring_layout(G_original, seed=42)
 
     edge_labels = {}
@@ -44,20 +49,29 @@ def guardar_imagen_final(G_original, grafo_residual, camino_final, layout_fijo, 
             edge_widths.append(2)
 
     nx.draw_networkx_nodes(G_original, pos, node_size=3500, node_color="#4A90E2",
-                           edgecolors="white", linewidths=6)
-    nx.draw_networkx_labels(G_original, pos, font_size=20, font_color="white", font_weight="bold")
+                           edgecolors="white", linewidths=6, ax=ax)
+    nx.draw_networkx_nodes(G_original, pos, node_size=3500, node_color="#4A90E2",
+                           edgecolors="white", linewidths=6, ax=ax)
+    nx.draw_networkx_labels(G_original, pos, font_size=20, font_color="white", 
+                           font_weight="bold", ax=ax)
+    
     nx.draw_networkx_edges(G_original, pos, width=edge_widths, edge_color=edge_colors,
-                           arrows=True, arrowsize=50, arrowstyle="->", alpha=0.95)
+                           arrows=True, arrowsize=50, arrowstyle="->", alpha=0.95,
+                           min_source_margin=30, min_target_margin=30, ax=ax)
+    
     nx.draw_networkx_edge_labels(G_original, pos, edge_labels=edge_labels,
-                                 label_pos=0.5, font_size=18, font_weight="bold",
+                                 label_pos=0.15,  # ← MUY CERCA DEL ORIGEN
+                                 font_size=18, font_weight="bold",
                                  font_color="white",
                                  bbox=dict(facecolor="#f39c12", alpha=0.9, boxstyle="round,pad=0.6"))
 
-    plt.title(f"Red Residual Final → Flujo Máximo = {flujo_total}",
-              fontsize=28, fontweight="bold", color="#2c3e50", pad=40)
-    plt.axis("off")
+    ax.set_title(f"Red Residual Final → Flujo Máximo = {flujo_total}",
+                 fontsize=30, fontweight="bold", color="#2c3e50", pad=40)
+    ax.axis("off")
     plt.tight_layout()
-    plt.savefig(ruta, dpi=200, bbox_inches="tight", facecolor="white")
+    
+    # Guardar con fondo gris
+    plt.savefig(ruta, dpi=200, bbox_inches="tight", facecolor="#f8f9fa", edgecolor="none")
     plt.close()
 
     return ruta
