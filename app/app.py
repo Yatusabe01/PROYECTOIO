@@ -8,7 +8,7 @@ from ui.flujo import calcular_flujo_maximo
 # Configuración
 st.set_page_config(
     page_title="Flujo Máximo • Editor de Grafos",
-    page_icon="logo/logo.png", 
+    page_icon="logo/logo.png",  # Cambia por el emoji que quieras
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -16,11 +16,18 @@ st.set_page_config(
 # CSS MEJORADO - Botones perfectos y sin "Press Enter"
 st.markdown("""
 <style>
-    /* Quitar botón Deploy y menús molestos */
+    /* Quitar botón Deploy pero MANTENER controles del sidebar */
     .stAppDeployButton {display: none !important;}
     #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
     footer {visibility: hidden;}
+    
+    /* IMPORTANTE: NO ocultar header completo, solo ajustarlo */
+    header {
+        visibility: visible !important;
+    }
+    header[data-testid="stHeader"] {
+        background-color: transparent;
+    }
 
     /* Fondo blanco puro */
     .stApp {background-color: #ffffff;}
@@ -165,9 +172,11 @@ st.markdown("""
 # App
 init_session()
 
-st.title("""
-         SNOWFLOW • CALCULADORA DE FLUJO MAXIMO
-         """)
+st.markdown("""
+    <h1 style='text-align: center; color: #2c3e50; font-weight: 700; margin-bottom: 2rem;'>
+        SNOWFLOW • CALCULADORA DE FLUJO MÁXIMO
+    </h1>
+""", unsafe_allow_html=True)
 
 with st.sidebar:
     st.markdown("### Controles")
@@ -188,10 +197,18 @@ with tab1:
 with tab2:
     calcular_flujo_maximo()
 
-st.markdown("<p style='font-size:14px; font-weight:600;'>Creado por:", unsafe_allow_html=True)
-st.markdown("<p style='font-size:14px; font-weight:600;'>Fredy Alexander de la Cruz Gomez</p>", unsafe_allow_html=True)
-st.markdown("<p style='font-size:14px; font-weight:600;'>Manuel de Jesus Flores de la Cruz</p>", unsafe_allow_html=True)
-st.markdown("<p style='font-size:14px; font-weight:600;'>Sebastian Emiliano Anzueto Escobar</p>", unsafe_allow_html=True)
-
-st.markdown("<p style='font-size:14px; font-weight:600; margin-top:12px;'>Colaboraciones:</p>", unsafe_allow_html=True)
-st.markdown("<p style='font-size:14px;'>Lester Randolf Ford, Jr. y Delbert Ray Fulkerson</p>", unsafe_allow_html=True)
+st.markdown("""
+<div style='text-align: center; padding: 2rem; background-color: #f8f9fc; border-radius: 12px; border: 2px solid #e9ecef; margin-top: 3rem;'>
+    <p style='font-size: 16px; font-weight: 700; color: #2c3e50; margin-bottom: 1rem;'>
+        Creado por:
+    </p>
+    <p style='font-size: 15px; color: #495057; margin: 0.4rem 0;'>
+        • Fredy Alexander de la Cruz Gomez<br>
+        • Manuel de Jesus Flores de la Cruz<br>
+        • Sebastian Emiliano Anzueto Escobar
+    </p>
+    <p style='font-size: 16px; font-weight: 700; color: #2c3e50; margin-top: 2rem; margin-bottom: 1rem;'>
+        Algoritmo: Ford-Fulkerson
+    </p>
+</div>
+""", unsafe_allow_html=True)

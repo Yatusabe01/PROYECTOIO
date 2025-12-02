@@ -4,12 +4,3 @@ backgroundColor = "#ffffff"
 secondaryBackgroundColor = "#f8f9fc"
 textColor = "#212529"
 font = "sans serif"
-
-[browser]
-gatherUsageStats = false
-
-[server]
-enableXsrfProtection = false
-
-[ui]
-hideTopBar = true
