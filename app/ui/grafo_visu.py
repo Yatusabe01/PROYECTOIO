@@ -24,7 +24,9 @@ def generar_layout_niveles(G, nodo_inicial=None):
 
     while queue:
         actual = queue.popleft()
-        for vecino in G.successors(actual):
+        # Ordenar sucesores para mejor distribución
+        sucesores = sorted(G.successors(actual), key=str)
+        for vecino in sucesores:
             if vecino not in visitados:
                 visitados.add(vecino)
                 niveles[vecino] = niveles[actual] + 1
@@ -39,13 +41,37 @@ def generar_layout_niveles(G, nodo_inicial=None):
     for nodo, nivel in niveles.items():
         nodos_por_nivel.setdefault(nivel, []).append(nodo)
 
+    # LAYOUT MEJORADO - ordenar nodos por conectividad
     for nivel, lista in nodos_por_nivel.items():
-        lista.sort(key=str)
-        y_step = 1.0 / (len(lista) + 1)
-        for i, nodo in enumerate(lista):
-            x = nivel * 5.0
-            y = (i + 1) * y_step * 2 - 1
-            pos[nodo] = (x, y)
+        # Ordenar por número de conexiones (más conectados al centro)
+        if nivel > 0:
+            # Ordenar por grado de entrada + salida
+            lista.sort(key=lambda n: (G.in_degree(n) + G.out_degree(n), str(n)), reverse=True)
+        else:
+            lista.sort(key=str)
+        
+        num_nodos = len(lista)
+        x = nivel * 6.0
+        
+        if num_nodos == 1:
+            pos[lista[0]] = (x, 0)
+        elif num_nodos == 2:
+            # Dos nodos: arriba y abajo simétricamente
+            pos[lista[0]] = (x, 1.5)
+            pos[lista[1]] = (x, -1.5)
+        elif num_nodos == 3:
+            # Tres nodos: arriba, centro, abajo
+            pos[lista[0]] = (x, 2.5)
+            pos[lista[1]] = (x, 0)
+            pos[lista[2]] = (x, -2.5)
+        else:
+            # Múltiples nodos: distribución simétrica
+            altura_total = (num_nodos - 1) * 2.2
+            y_inicio = -altura_total / 2
+            
+            for i, nodo in enumerate(lista):
+                y = y_inicio + i * 2.2
+                pos[nodo] = (x, y)
 
     return pos, nodo_inicial
 
@@ -62,8 +88,19 @@ def mostrar_grafo(fuente=None, sumidero=None):
 
     if fuente and sumidero and fuente in G.nodes and sumidero in G.nodes:
         pos, _ = generar_layout_niveles(G, nodo_inicial=fuente)
+        
+        # Colocar sumidero al final, centrado verticalmente
         max_x = max(x for x, y in pos.values())
-        pos[sumidero] = (max_x + 5.0, 0)
+        
+        # Calcular el centro vertical de todos los nodos
+        todas_y = [y for x, y in pos.values() if (x, y) != pos.get(sumidero, (None, None))]
+        if todas_y:
+            y_centro = sum(todas_y) / len(todas_y)
+        else:
+            y_centro = 0
+        
+        pos[sumidero] = (max_x + 6.0, y_centro)
+        
         titulo = f"Grafo del Flujo → Fuente: {fuente} | Sumidero: {sumidero}"
         caption = f"Ordenado desde la fuente **{fuente}**"
         color_map = ['#e74c3c' if n == fuente else '#9b59b6' if n == sumidero else '#3498db' for n in G.nodes]
@@ -75,8 +112,17 @@ def mostrar_grafo(fuente=None, sumidero=None):
 
     st.session_state.layout_fs = pos
 
+    # Ajustar tamaño de figura según cantidad de nodos
+    num_nodos = len(G.nodes)
+    if num_nodos <= 4:
+        fig_height = 8
+    elif num_nodos <= 8:
+        fig_height = 10
+    else:
+        fig_height = 12
+    
     # Crear figura con fondo gris
-    fig, ax = plt.subplots(figsize=(18, 10))
+    fig, ax = plt.subplots(figsize=(18, fig_height))
     fig.patch.set_facecolor('#f8f9fa')
     ax.set_facecolor('#f8f9fa')
 
