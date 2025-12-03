@@ -1,6 +1,3 @@
-# app/utils/step.py
-# Con fondo gris para mantener consistencia visual
-
 import networkx as nx
 import matplotlib.pyplot as plt
 import os

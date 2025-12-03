@@ -1,6 +1,3 @@
-# app/ui/grafo_visu.py
-# Versión con bordes que REALMENTE funcionan
-
 import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt

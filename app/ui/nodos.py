@@ -1,6 +1,6 @@
 import streamlit as st
 
-MAX_NODOS = 20
+MAX_NODOS = 10
 
 def gestionar_nodos():
 
@@ -35,7 +35,7 @@ def gestionar_nodos():
 
     borrar_nodo = st.sidebar.selectbox(
         "Borrar nodo:",
-        ["-- Selecciona un nodo --"] + sorted(st.session_state.nodos)
+        ["  Selecciona un nodo"  ] + sorted(st.session_state.nodos)
     )
 
     if st.sidebar.button("Eliminar Nodo"):

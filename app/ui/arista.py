@@ -49,7 +49,6 @@ def gestionar_aristas():
         if st.sidebar.button("Eliminar Arista"):
             eliminada = aristas_unicas[idx]
 
-            # quitar SOLO UNA OCURRENCIA aunque hayan duplicados
             for i, a in enumerate(st.session_state.aristas):
                 if a == eliminada:
                     st.session_state.aristas.pop(i)

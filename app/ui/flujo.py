@@ -1,6 +1,3 @@
-# app/ui/flujo.py
-# Con bordes que funcionan correctamente
-
 import streamlit as st
 import networkx as nx
 from ui.algoritmo import Grafo

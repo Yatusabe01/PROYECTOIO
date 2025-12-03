@@ -5,15 +5,13 @@ from ui.arista import gestionar_aristas
 from ui.grafo_visu import mostrar_grafo
 from ui.flujo import calcular_flujo_maximo
 
-# Configuración
 st.set_page_config(
     page_title="Flujo Máximo • Editor de Grafos",
-    page_icon="logo/logo.png",  # Cambia por el emoji que quieras
+    page_icon="logo/logo.png", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# CSS MEJORADO - Botones perfectos y sin "Press Enter"
 st.markdown("""
 <style>
     /* Quitar botón Deploy pero MANTENER controles del sidebar */
@@ -169,7 +167,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# App
 init_session()
 
 st.markdown("""
@@ -208,7 +205,7 @@ st.markdown("""
         • Sebastian Emiliano Anzueto Escobar
     </p>
     <p style='font-size: 16px; font-weight: 700; color: #2c3e50; margin-top: 2rem; margin-bottom: 1rem;'>
-        Algoritmo: Ford-Fulkerson
+        Colaborador: Ford-Fulkerson y Edmonds-Karp
     </p>
 </div>
 """, unsafe_allow_html=True)
